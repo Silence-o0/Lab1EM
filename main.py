@@ -118,7 +118,7 @@ if __name__ == '__main__':
         print("Point is quasi-stable")
     print()
 
-    #Arc elasticity of demand
+    #Arc elasticity
     print("Arc elasticity of demand: ",
           arc_elasticity(demand[count_points - 1], demand[0], price[count_points - 1], price[0], sum(price)))
     print("Arc elasticity of supply: ",
