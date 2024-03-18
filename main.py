@@ -15,30 +15,27 @@ def supply_function(x, a, b, c):
 
 
 def equations(variable):
-    eq1 = 9.48106745790962 + 109.169046702949 * np.exp(-1.90151984955408 * variable[0])
-    eq2 = 0.4336845 + 255.98520268 * np.log(0.3457538 * variable[0] + 1)
+    eq1 = demand_function(variable[0], popt_demand[0], popt_demand[1], popt_demand[2])
+    eq2 = supply_function(variable[0], popt_supply[0], popt_supply[1], popt_supply[2])
     return [eq1 - eq2]
 
 
-def taxed_equations(variable):
-    eq1 = 9.48106745790962 + 109.169046702949 * np.exp(-1.90151984955408 * (variable[0] + 0.1))
-    eq2 = 0.4336845 + 255.98520268 * np.log(0.3457538 * variable[0] + 1)
+def taxed_demand_equations(variable):
+    eq1 = demand_function(variable[0] + t, popt_demand[0], popt_demand[1], popt_demand[2])
+    eq2 = supply_function(variable[0], popt_supply[0], popt_supply[1], popt_supply[2])
     return [eq1 - eq2]
 
 
-def arc_elasticity(Q1, Q2, P1, P2):
-    arc = ((Q2-Q1)/(P2-P1))/((Q2+Q1)/(P2+P1))
+def arc_elasticity(Q_1, Q_n, P_1, P_n, P_sum):
+    arc = ((Q_n - Q_1) / (P_n - P_1)) * (P_sum / (Q_n + Q_1))
     return arc
-
-
-# def taxed_demand_function(x, a, b, c, t):
-#     return a * np.exp(-b * (x - t)) + c
 
 
 if __name__ == '__main__':
     price = [0.1, 0.3, 0.45, 0.7, 0.8, 1.05, 1.2, 1.25, 1.31, 1.4, 1.47, 1.55]
     demand = [100, 69, 58, 40, 35, 20, 18, 17, 19, 21, 18, 15]
     supply = [10, 25, 39, 52, 60, 84, 91, 95, 97, 100, 105, 108]
+    count_points = len(price)
 
     g = np.linspace(0.1, 1.55, 51)
 
@@ -115,22 +112,25 @@ if __name__ == '__main__':
 
     if abs(E_d_eqp) > abs(E_s_eqp):
         print("Point is stable")
-    else:
+    elif abs(E_d_eqp) < abs(E_s_eqp):
         print("Point is not stable")
+    else:
+        print("Point is quasi-stable")
+    print()
 
     #Arc elasticity of demand
-    # print(arc_elasticity(demand[3], demand[4], price[3], price[4]))
-    # print(arc_elasticity(demand[11], demand[0], price[11], price[0]))
+    print("Arc elasticity of demand: ",
+          arc_elasticity(demand[count_points - 1], demand[0], price[count_points - 1], price[0], sum(price)))
+    print("Arc elasticity of supply: ",
+          arc_elasticity(supply[count_points - 1], supply[0], price[count_points - 1], price[0], sum(price)))
 
     #After taxation on demand
     t = 0.1
-    # taxed_demand_func = a * np.exp(-b * (P + t)) + c
-    plt.plot(demand_function(g - g*t, popt_demand[0], popt_demand[1], popt_demand[2]), g, label='Taxed demand')
-    P_eqp_taxed = fsolve(taxed_equations, 0.6)[0]
+    plt.plot(demand_function(g + t, popt_demand[0], popt_demand[1], popt_demand[2]), g, label='Taxed demand')
+    P_eqp_taxed = fsolve(taxed_demand_equations, 0.6)[0]
     Q_eqp_taxed = supply_func_res.subs({P: P_eqp_taxed})
-    print(f"Equilibrium point: ({round(Q_eqp_taxed, 3)}; {round(P_eqp_taxed, 3)})")
-    plt.plot(Q_eqp_taxed, P_eqp_taxed, 'bo', label='Equilibrium point')
-    # print(taxed_demand_func)
+    print(f"Equilibrium point with taxed demand: ({round(Q_eqp_taxed, 3)}; {round(P_eqp_taxed, 3)})")
+    plt.plot(Q_eqp_taxed, P_eqp_taxed, 'bo', label='Taxed demand eq point')
 
     plt.legend()
     plt.show()
